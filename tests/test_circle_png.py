@@ -3,6 +3,7 @@ import math
 import struct
 import subprocess
 import zlib
+import sys
 from pathlib import Path
 
 
@@ -30,12 +31,13 @@ def _draw_disc(pixels: bytearray, width: int, height: int, cx: int, cy: int, rad
 
 
 def test_sigils_and_json_maker_create_circle_png(tmp_path: Path) -> None:
-    sigil_dir = Path('assets/sigils')
+    repo_root = Path(__file__).resolve().parents[1]
+    sigil_dir = repo_root / 'assets' / 'sigils'
     sigils = sorted(p.stem for p in sigil_dir.glob('*.svg'))[:8]
     assert sigils, 'Expected svg sigils in assets/sigils.'
 
     result = subprocess.run(
-        ['python3', 'circle_converter.py', *sigils],
+        [sys.executable, str(repo_root / 'circle_converter.py'), *sigils],
         check=True,
         capture_output=True,
         text=True,
@@ -67,10 +69,10 @@ def test_sigils_and_json_maker_create_circle_png(tmp_path: Path) -> None:
     out_path = tmp_path / 'sigil_circle.png'
     _write_png(out_path, rows, width, height)
 
-    test_output_path = Path('tests/sigil_circle.png')
+    test_output_path = repo_root / 'tests' / 'sigil_circle.png'
     _write_png(test_output_path, rows, width, height)
 
-    preview_path = Path('sigil_circle.png')
+    preview_path = repo_root / 'sigil_circle.png'
     _write_png(preview_path, rows, width, height)
 
     assert out_path.exists()
