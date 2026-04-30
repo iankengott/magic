@@ -225,3 +225,47 @@ Medium rarity + labor investment determine potential spell level.
 ## 14) Condensed Description
 
 Vector-Regnum is a dangerous, expressive spell-language where identity, materials, and formal structure determine magical outcomes. It rewards planning, logic, and mastery; it punishes careless casting with unstable, often costly miscompilation.
+
+---
+
+## 15) Utility: Sigil Circle JSON Converter
+
+A helper script is included for early prototyping while spell definitions are still in flux.
+
+- File: `circle_converter.py`
+- Purpose: convert a sigil list into evenly spaced positions around a circle, relative to center `(0,0)`.
+- Output: JSON containing each sigil, index/order, angle, and `(x,y)` position.
+
+### Example
+
+```bash
+python3 circle_converter.py 1 2 3 4 --pretty
+```
+
+Example output:
+
+```json
+{
+  "circle": {
+    "center": {"x": 0.0, "y": 0.0},
+    "radius": 1.0,
+    "start_angle_degrees": 90.0,
+    "rotation": "clockwise"
+  },
+  "sigil_count": 4,
+  "sigils": [
+    {"index": 0, "sigil": "1", "angle_degrees": 90.0, "position": {"x": 0.0, "y": 1.0}},
+    {"index": 1, "sigil": "2", "angle_degrees": 0.0, "position": {"x": 1.0, "y": 0.0}},
+    {"index": 2, "sigil": "3", "angle_degrees": -90.0, "position": {"x": 0.0, "y": -1.0}},
+    {"index": 3, "sigil": "4", "angle_degrees": -180.0, "position": {"x": -1.0, "y": -0.0}}
+  ]
+}
+```
+
+This places:
+- sigil `1` at the top,
+- sigil `2` at the right,
+- sigil `3` at the bottom,
+- sigil `4` at the left,
+
+with clockwise ordering and equal angular spacing.
