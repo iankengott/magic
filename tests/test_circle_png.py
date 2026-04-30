@@ -67,5 +67,10 @@ def test_sigils_and_json_maker_create_circle_png(tmp_path: Path) -> None:
     out_path = tmp_path / 'sigil_circle.png'
     _write_png(out_path, rows, width, height)
 
+    test_output_path = Path('tests/sigil_circle.png')
+    _write_png(test_output_path, rows, width, height)
+
     assert out_path.exists()
     assert out_path.read_bytes().startswith(b'\x89PNG\r\n\x1a\n')
+    assert test_output_path.exists()
+    assert test_output_path.read_bytes().startswith(b'\x89PNG\r\n\x1a\n')
