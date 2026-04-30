@@ -1,4 +1,3 @@
-import argparse
 import json
 import math
 import struct
@@ -21,28 +20,19 @@ def _write_png(path: Path, rgba_rows: list[bytes], width: int, height: int) -> N
     path.write_bytes(png)
 
 
-def _draw_disc(
-    pixels: bytearray,
-    width: int,
-    height: int,
-    cx: int,
-    cy: int,
-    radius: int,
-    color: tuple[int, int, int, int],
-) -> None:
+def _draw_disc(pixels: bytearray, width: int, height: int, cx: int, cy: int, radius: int, color: tuple[int, int, int, int]):
     r2 = radius * radius
     for y in range(max(0, cy - radius), min(height, cy + radius + 1)):
         for x in range(max(0, cx - radius), min(width, cx + radius + 1)):
             if (x - cx) ** 2 + (y - cy) ** 2 <= r2:
                 i = (y * width + x) * 4
-                pixels[i : i + 4] = bytes(color)
+                pixels[i:i + 4] = bytes(color)
 
 
-def build_sigil_circle_png(output_path: Path, sigil_limit: int = 8, size: int = 256) -> Path:
+def test_sigils_and_json_maker_create_circle_png(tmp_path: Path) -> None:
     sigil_dir = Path('assets/sigils')
-    sigils = sorted(p.stem for p in sigil_dir.glob('*.svg'))[:sigil_limit]
-    if not sigils:
-        raise ValueError('Expected svg sigils in assets/sigils.')
+    sigils = sorted(p.stem for p in sigil_dir.glob('*.svg'))[:8]
+    assert sigils, 'Expected svg sigils in assets/sigils.'
 
     result = subprocess.run(
         ['python3', 'circle_converter.py', *sigils],
@@ -52,12 +42,14 @@ def build_sigil_circle_png(output_path: Path, sigil_limit: int = 8, size: int = 
     )
     payload = json.loads(result.stdout)
 
+    size = 256
     width = height = size
     pixels = bytearray([18, 18, 24, 255] * (width * height))
 
     cx = cy = size // 2
     radius_px = int(size * 0.35)
 
+    # Draw a faint ring.
     for t in range(360):
         a = math.radians(t)
         x = int(cx + radius_px * math.cos(a))
@@ -71,30 +63,9 @@ def build_sigil_circle_png(output_path: Path, sigil_limit: int = 8, size: int = 
         y = int(cy - y_norm * radius_px)
         _draw_disc(pixels, width, height, x, y, radius=5, color=(235, 220, 120, 255))
 
-    rows = [bytes(pixels[y * width * 4 : (y + 1) * width * 4]) for y in range(height)]
-    _write_png(output_path, rows, width, height)
-    return output_path
+    rows = [bytes(pixels[y * width * 4:(y + 1) * width * 4]) for y in range(height)]
+    out_path = tmp_path / 'sigil_circle.png'
+    _write_png(out_path, rows, width, height)
 
-
-def test_sigils_and_json_maker_create_circle_png(tmp_path: Path) -> None:
-    out_path = build_sigil_circle_png(tmp_path / 'sigil_circle.png')
     assert out_path.exists()
     assert out_path.read_bytes().startswith(b'\x89PNG\r\n\x1a\n')
-
-
-def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description='Create a sigil circle PNG from circle_converter JSON output.')
-    parser.add_argument('--output', default='sigil_circle.png', help='Output PNG path (default: sigil_circle.png)')
-    parser.add_argument('--sigil-limit', type=int, default=8, help='Number of sigils to place (default: 8)')
-    parser.add_argument('--size', type=int, default=256, help='Square image size in pixels (default: 256)')
-    return parser.parse_args()
-
-
-def main() -> None:
-    args = _parse_args()
-    output = build_sigil_circle_png(Path(args.output), sigil_limit=args.sigil_limit, size=args.size)
-    print(f'Wrote PNG: {output.resolve()}')
-
-
-if __name__ == '__main__':
-    main()
