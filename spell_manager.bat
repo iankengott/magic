@@ -2,12 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "BASE_DIR=%~dp0spells"
-set "META_DIR=%BASE_DIR%\metadata"
 if not exist "%BASE_DIR%" mkdir "%BASE_DIR%"
-if not exist "%META_DIR%" mkdir "%META_DIR%"
-
-call :find_python
-call :ensure_example
 
 echo ================================
 echo        Vector-Regnum Spells
@@ -23,15 +18,6 @@ if "%CHOICE%"=="3" goto :done
 
 echo Invalid choice.
 goto :done
-
-:ensure_example
-set "EXAMPLE_NAME=example_firebolt"
-set "EXAMPLE_TXT=%BASE_DIR%\%EXAMPLE_NAME%.txt"
-if exist "%EXAMPLE_TXT%" exit /b
-
-echo Creating example spell "%EXAMPLE_NAME%" so first-time users can see the format...
-call :save_spell "%EXAMPLE_NAME%" "manifest,bind,vector,impulse"
-exit /b
 
 :new_spell
 set /p SPELL_NAME=Spell name: 
@@ -85,9 +71,7 @@ goto :done
 set "NAME=%~1"
 set "SIGIL_LINE=%~2"
 set "TXT_FILE=%BASE_DIR%\%NAME%.txt"
-set "JSON_FILE=%META_DIR%\%NAME%.json"
-set "CIRCLE_JSON=%META_DIR%\%NAME%_circle.json"
-set "CIRCLE_PNG=%META_DIR%\%NAME%_circle.png"
+set "JSON_FILE=%BASE_DIR%\%NAME%.json"
 
 echo %SIGIL_LINE%>"%TXT_FILE%"
 
@@ -104,41 +88,8 @@ for %%S in (%SIGIL_LINE:,= %) do (
   echo {
   echo   "name": "%NAME%",
   echo   "sigils_raw": "%SIGIL_LINE%",
-  echo   "sigils": [!SIGIL_JSON!],
-  echo   "circle_json": "%NAME%_circle.json",
-  echo   "circle_image": "%NAME%_circle.png"
+  echo   "sigils": [!SIGIL_JSON!]
   echo }
-)
-
-if defined PYTHON_CMD (
-  %PYTHON_CMD% "%~dp0circle_converter.py" %SIGIL_LINE:,= % --pretty > "%CIRCLE_JSON%"
-  if errorlevel 1 (
-    echo Failed to generate circle JSON preview metadata.
-    exit /b 1
-  )
-
-  %PYTHON_CMD% "%~dp0json_to_image.py" "%CIRCLE_JSON%" "%CIRCLE_PNG%"
-  if errorlevel 1 (
-    echo Failed to generate circle image preview.
-    exit /b 1
-  )
-) else (
-  echo Python not found. Saved txt/json metadata but skipped circle preview generation.
-)
-
-exit /b
-
-:find_python
-set "PYTHON_CMD="
-where py >nul 2>nul
-if %errorlevel%==0 (
-  set "PYTHON_CMD=py -3"
-  exit /b
-)
-
-where python >nul 2>nul
-if %errorlevel%==0 (
-  set "PYTHON_CMD=python"
 )
 exit /b
 
