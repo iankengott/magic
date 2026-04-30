@@ -269,3 +269,12 @@ This places:
 - sigil `4` at the left,
 
 with clockwise ordering and equal angular spacing.
+
+## JSON to Image Preview
+
+Render the JSON output into a PNG preview:
+
+```bash
+python circle_converter.py manifest bind scale vector --pretty > sample_layout.json
+python json_to_image.py sample_layout.json sample_layout.png
+```
